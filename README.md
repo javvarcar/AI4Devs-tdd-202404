@@ -21,7 +21,6 @@ Este proyecto es una aplicación full-stack con un frontend en React y un backen
   - `build/`: Contiene la construcción lista para producción del frontend.
 - `.env`: Contiene las variables de entorno.
 - `docker-compose.yml`: Contiene la configuración de Docker Compose para gestionar los servicios de tu aplicación.
-- `LTI.code-workspace`: Contiene configuraciones de espacio de trabajo de Visual Studio Code.
 - `README.md`: Este archivo, contiene información sobre el proyecto e instrucciones sobre cómo ejecutarlo.
 
 ## Estructura del Proyecto
@@ -64,11 +63,6 @@ cd backend
 npm run build
 ````
 4. Inicia el servidor backend:
-```
-cd backend
-npm run dev 
-```
-tambien funciona
 ```
 cd backend
 npm start
@@ -122,3 +116,38 @@ Para generar la base de datos utilizando Prisma, sigue estos pasos:
 ```
 npx prisma migrate dev
 ```
+
+Una vez has dado todos los pasos, deberías poder guardar nuevos candidatos, tanto via web, como via API, y verlos en la base de datos.
+
+```
+POST http://localhost:3010/candidates
+{
+    "firstName": "Albert",
+    "lastName": "Saelices",
+    "email": "albert.saelices@gmail.com",
+    "phone": "656874937",
+    "address": "Calle Sant Dalmir 2, 5ºB. Barcelona",
+    "educations": [
+        {
+            "institution": "UC3M",
+            "title": "Computer Science",
+            "startDate": "2006-12-31",
+            "endDate": "2010-12-26"
+        }
+    ],
+    "workExperiences": [
+        {
+            "company": "Coca Cola",
+            "position": "SWE",
+            "description": "",
+            "startDate": "2011-01-13",
+            "endDate": "2013-01-17"
+        }
+    ],
+    "cv": {
+        "filePath": "uploads/1715760936750-cv.pdf",
+        "fileType": "application/pdf"
+    }
+}
+```
+

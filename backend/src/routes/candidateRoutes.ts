@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addCandidate, getCandidateById } from '../presentation/controllers/candidateController';
+import { addCandidate } from '../presentation/controllers/candidateController';
 
 const router = Router();
 

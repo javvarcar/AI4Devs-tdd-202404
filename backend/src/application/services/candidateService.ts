@@ -3,7 +3,6 @@ import { validateCandidateData } from '../validator';
 import { Education } from '../../domain/models/Education';
 import { WorkExperience } from '../../domain/models/WorkExperience';
 import { Resume } from '../../domain/models/Resume';
-import { prisma } from '@prisma/client';
 
 export const addCandidate = async (candidateData: any) => {
     try {
