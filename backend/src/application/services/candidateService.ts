@@ -47,7 +47,7 @@ export const addCandidate = async (candidateData: any) => {
     } catch (error: any) {
         if (error.code === 'P2002') {
             // Unique constraint failed on the fields: (`email`)
-            throw new Error('El email ya existe en la base de datos');
+            throw new Error('The email already exists in the database');
         } else {
             throw error;
         }
