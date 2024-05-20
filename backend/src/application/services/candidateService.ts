@@ -8,7 +8,7 @@ export const addCandidate = async (candidateData: any) => {
     try {
         validateCandidateData(candidateData); // Validar los datos del candidato
     } catch (error: any) {
-        throw new Error(error);
+        throw error;
     }
 
     const candidate = new Candidate(candidateData); // Crear una instancia del modelo Candidate

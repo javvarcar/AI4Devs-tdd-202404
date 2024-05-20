@@ -11,6 +11,16 @@ const mockPrismaClient = {
         update: jest.fn(),
         findUnique: jest.fn(),
     },
+    resume: {
+        create: jest.fn(),
+        update: jest.fn(),
+        findUnique: jest.fn(),
+    },
+    workExperience: {
+        create: jest.fn(),
+        update: jest.fn(),
+        findUnique: jest.fn(),
+    }
 };
 
 export const PrismaClient = jest.fn(() => mockPrismaClient);
