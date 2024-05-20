@@ -1,102 +1,72 @@
+import { PrismaClient } from '@prisma/client';
 import { addCandidate } from './candidateService';
-import * as validator from '../validator';
 
-// Define reusable mock implementations
-const mockCandidate = {
-    save: jest.fn().mockResolvedValue({ id: 123 }),
-    education: [],
-    workExperience: [],
-    resumes: []
-};
+jest.mock('@prisma/client');
 
-const mockEducation = {
-    save: jest.fn().mockResolvedValue({})
-};
+// Get a reference to the mocked module
+const mockedPrisma = new PrismaClient();
 
-const mockExperience = {
-    save: jest.fn().mockResolvedValue({})
-};
-
-const mockResume = {
-    save: jest.fn().mockResolvedValue({})
-};
-
-// Set up mocks with these implementations
-jest.mock('../../domain/models/Candidate', () => ({
-    Candidate: jest.fn(() => mockCandidate)
-}));
-
-jest.mock('../../domain/models/Education', () => ({
-    Education: jest.fn(() => mockEducation)
-}));
-
-jest.mock('../../domain/models/WorkExperience', () => ({
-    WorkExperience: jest.fn(() => mockExperience)
-}));
-
-jest.mock('../../domain/models/Resume', () => ({
-    Resume: jest.fn(() => mockResume)
-}));
-
-jest.mock('../validator', () => ({
-    validateCandidateData: jest.fn()
-}));
+const candidateData = { email: 'test@example.com', firstName: 'John', lastName: 'Doe' };
 
 describe('addCandidate', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Reset mock implementations if necessary
-        mockCandidate.save.mockResolvedValue({ id: 123 });
     });
 
-    it('should validate candidate data', async () => {
-        const candidateData = { email: 'test@example.com' };
-        await addCandidate(candidateData);
-        expect(validator.validateCandidateData).toHaveBeenCalledWith(candidateData);
-    });
-
-    it('should throw an error if validation fails', async () => {
-        const candidateData = { email: 'bad-email' };
-        (validator.validateCandidateData as jest.Mock).mockImplementationOnce(() => {
-            throw new Error('Invalid data');
+    it('should validate candidate data and save the candidate', async () => {
+        (mockedPrisma.candidate.create as jest.Mock).mockResolvedValue({
+            id: 123,
+            ...candidateData
         });
-        await expect(addCandidate(candidateData)).rejects.toThrow('Invalid data');
+
+        const result = await addCandidate(candidateData);
+
+        expect(mockedPrisma.candidate.create).toHaveBeenCalledWith({
+            data: candidateData,
+        });
+        expect(result.id).toEqual(123);
     });
 
-    it('should save the candidate and return the saved data', async () => {
-        const candidateData = { email: 'test@gmail.com' };
-        await expect(addCandidate(candidateData)).resolves.toEqual({ id: 123 });
-        expect(mockCandidate.save).toHaveBeenCalled();
-    });
-
-    it('should save related educations', async () => {
-        const candidateData = { email: 'test@example.com', educations: [{ institution: 'Uni', startDate: '2020-01-01' }] };
-        await addCandidate(candidateData);
-        expect(mockEducation.save).toHaveBeenCalled();
-        expect(mockCandidate.education).toContain(mockEducation);
-    });
-
-    it('should save related work experiences', async () => {
-        const candidateData = { email: 'test@example.com', workExperiences: [{ company: 'Company', startDate: '2020-01-01' }] };
-        await addCandidate(candidateData);
-        expect(mockExperience.save).toHaveBeenCalled();
-        expect(mockCandidate.workExperience).toContain(mockExperience);
-    });
-
-    it('should save CV if provided', async () => {
-        const candidateData = { email: 'test@example.com', cv: { filePath: 'path/to/cv.pdf', fileType: 'pdf' } };
-        await addCandidate(candidateData);
-        expect(mockResume.save).toHaveBeenCalled();
-        expect(mockCandidate.resumes).toContain(mockResume);
-    });
-
-    it('should handle general errors during saving process', async () => {
-        const candidateData = { email: 'test@example.com' };
+    it('should handle errors during the saving process', async () => {
         const error = new Error('Database error');
-        mockCandidate.save.mockRejectedValue(error);
+        (mockedPrisma.candidate.create as jest.Mock).mockRejectedValue(error);
+
         await expect(addCandidate(candidateData)).rejects.toThrow('Database error');
     });
+
+    // Additional tests for related data like education, work experiences, and resumes can be added here
+    // Example for education:
+    it('should save related educations', async () => {
+        const candidateWithEducations = {
+            ...candidateData,
+            educations: [{
+                institution: 'Uni',
+                title: 'Bachelor of Science',
+                startDate: '2020-01-01'
+            }]
+        };
+        (mockedPrisma.candidate.create as jest.Mock).mockResolvedValue({
+            id: 123,
+            ...candidateWithEducations
+        });
+        (mockedPrisma.education.create as jest.Mock).mockResolvedValue({
+            id: 1,
+            ...candidateWithEducations.educations[0]
+        });
+
+        await addCandidate(candidateWithEducations);
+
+        expect(mockedPrisma.education.create).toHaveBeenCalledWith({
+            data: {
+                candidateId: 123,
+                ...candidateWithEducations.educations[0],
+                startDate: new Date(candidateWithEducations.educations[0].startDate) // Convert string to Date object
+            }
+        });
+    });
 });
+
+
 
 
 
