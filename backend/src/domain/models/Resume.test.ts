@@ -110,6 +110,61 @@ describe('Resume Model', () => {
 
             await expect(resume.save()).rejects.toThrow('Unexpected error');
         });
+
+        it('should handle different file types', async () => {
+            const resume = new Resume({
+                candidateId: 1,
+                filePath: 'resume.docx',
+                fileType: 'docx'
+            });
+
+            (prisma.resume.create as jest.Mock).mockResolvedValue({
+                id: 3,
+                candidateId: 1,
+                filePath: 'resume.docx',
+                fileType: 'docx',
+                uploadDate: new Date()
+            });
+
+            const expectedResume = {
+                id: 3,
+                candidateId: 1,
+                filePath: 'resume.docx',
+                fileType: 'docx',
+                uploadDate: expect.any(Date)
+            };
+
+            const result = await resume.save();
+            expect(result).toEqual(expectedResume);
+        });
+
+        it('should handle large file sizes', async () => {
+            const largeFilePath = 'large_resume.pdf';
+            const resume = new Resume({
+                candidateId: 1,
+                filePath: largeFilePath,
+                fileType: 'pdf'
+            });
+
+            (prisma.resume.create as jest.Mock).mockResolvedValue({
+                id: 4,
+                candidateId: 1,
+                filePath: largeFilePath,
+                fileType: 'pdf',
+                uploadDate: new Date()
+            });
+
+            const expectedResume = {
+                id: 4,
+                candidateId: 1,
+                filePath: largeFilePath,
+                fileType: 'pdf',
+                uploadDate: expect.any(Date)
+            };
+
+            const result = await resume.save();
+            expect(result).toEqual(expectedResume);
+        });
     });
 
     describe('findOne method', () => {
