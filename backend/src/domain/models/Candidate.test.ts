@@ -479,5 +479,43 @@ describe('Candidate Model', () => {
             logSpy.mockRestore();
         });
     });
-});
 
+    describe('Data Integrity Tests', () => {
+        it('should throw an error if email is not unique', async () => {
+            const candidate = new Candidate({
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john.doe@example.com'
+            });
+
+            (prisma.candidate.create as jest.Mock).mockRejectedValue({
+                code: 'P2002', // Unique constraint failed
+                meta: { target: ['email'] }
+            });
+
+            await expect(candidate.save()).rejects.toThrow('Unique constraint failed on the fields: (email)');
+        });
+
+        it('should throw an error if foreign key constraint is violated', async () => {
+            const candidate = new Candidate({
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john.doe@example.com',
+                resumes: [
+                    {
+                        filePath: 'resume1.pdf',
+                        fileType: 'pdf',
+                        candidateId: 999 // Assuming this candidateId does not exist
+                    }
+                ]
+            });
+
+            (prisma.candidate.create as jest.Mock).mockRejectedValue({
+                code: 'P2003', // Foreign key constraint failed
+                meta: { field_name: 'Resume_candidateId_fkey (index)' }
+            });
+
+            await expect(candidate.save()).rejects.toThrow('Foreign key constraint failed on the field: Resume_candidateId_fkey (index)');
+        });
+    });
+});

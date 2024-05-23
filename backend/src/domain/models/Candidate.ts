@@ -74,44 +74,39 @@ export class Candidate {
             };
         }
 
-        let result;
-        if (this.id) {
-            // Actualizar un candidato existente
-            try {
+        try {
+            let result;
+            if (this.id) {
+                // Actualizar un candidato existente
                 result = await prisma.candidate.update({
                     where: { id: this.id },
                     data: candidateData
                 });
-            } catch (error: any) {
-                if (error instanceof PrismaClientInitializationError) {
-                    // Database connection error
-                    throw new Error('No se pudo conectar con la base de datos. Por favor, asegúrese de que el servidor de base de datos esté en ejecución.');
-                } else if (error.code === 'P2025') {
-                    // Record not found error
-                    throw new Error('No se pudo encontrar el registro del candidato con el ID proporcionado.');
-                } else {
-                    throw error;
-                }
-            }
-        } else {
-            // Crear un nuevo candidato
-            try {
+            } else {
+                // Crear un nuevo candidato
                 result = await prisma.candidate.create({
                     data: candidateData
                 });
-            } catch (error: any) {
-                if (error instanceof PrismaClientInitializationError) {
-                    // Database connection error
-                    throw new Error('No se pudo conectar con la base de datos. Por favor, asegúrese de que el servidor de base de datos esté en ejecución.');
-                } else {
-                    throw error;
-                }
+            }
+
+            // Excluir el campo email del resultado
+            const { email, ...safeResult } = result;
+            return safeResult;
+
+        } catch (error: any) {
+            if (error instanceof PrismaClientInitializationError) {
+                throw new Error('No se pudo conectar con la base de datos. Por favor, asegúrese de que el servidor de base de datos esté en ejecución.');
+            } else if (error.code === 'P2025') {
+                throw new Error('No se pudo encontrar el registro del candidato con el ID proporcionado.');
+            } else if (error.code === 'P2002') {
+                throw new Error(`Unique constraint failed on the fields: (${error.meta.target.join(', ')})`);
+            } else if (error.code === 'P2003') {
+                throw new Error(`Foreign key constraint failed on the field: ${error.meta.field_name}`);
+            } else {
+                throw error;
             }
         }
 
-        // Excluir el campo email del resultado
-        const { email, ...safeResult } = result;
-        return safeResult;
     }
 
     static async findOne(id: number): Promise<Candidate | null> {
@@ -122,4 +117,5 @@ export class Candidate {
         return new Candidate(data);
     }
 }
+
 
