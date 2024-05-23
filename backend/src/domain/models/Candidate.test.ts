@@ -14,10 +14,28 @@ describe('Candidate Model', () => {
                 email: 'john.doe@example.com'
             });
 
-            (prisma.candidate.update as jest.Mock).mockResolvedValue(candidate);
+            (prisma.candidate.update as jest.Mock).mockResolvedValue({
+                id: 1,
+                firstName: 'John',
+                lastName: 'Doe',
+                phone: undefined,
+                address: undefined,
+                education: [],
+                workExperience: [],
+                resumes: []
+            });
 
             const result = await candidate.save();
-            expect(result).toEqual(candidate);
+            expect(result).toEqual({
+                id: 1,
+                firstName: 'John',
+                lastName: 'Doe',
+                phone: undefined,
+                address: undefined,
+                education: [],
+                workExperience: [],
+                resumes: []
+            });
             expect(prisma.candidate.update).toHaveBeenCalledWith({
                 where: { id: 1 },
                 data: expect.any(Object)
@@ -138,12 +156,10 @@ describe('Candidate Model', () => {
                 email: 'john.doe@example.com'
             });
 
-            // Ensure the mock includes all fields, especially the 'id' field
             (prisma.candidate.create as jest.Mock).mockResolvedValue({
                 id: 1,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -156,7 +172,6 @@ describe('Candidate Model', () => {
                 id: 1,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -184,7 +199,6 @@ describe('Candidate Model', () => {
                 id: 3,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [
@@ -204,7 +218,6 @@ describe('Candidate Model', () => {
                 id: 3,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [
@@ -240,7 +253,6 @@ describe('Candidate Model', () => {
                 id: 4,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -261,7 +273,6 @@ describe('Candidate Model', () => {
                 id: 4,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -295,7 +306,6 @@ describe('Candidate Model', () => {
                 id: 5,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -313,7 +323,6 @@ describe('Candidate Model', () => {
                 id: 5,
                 firstName: 'John',
                 lastName: 'Doe',
-                email: 'john.doe@example.com',
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -422,6 +431,52 @@ describe('Candidate Model', () => {
             const result = await Candidate.findOne(1);
             expect(result).toBeInstanceOf(Candidate);
             expect(result?.id).toEqual(1);
+        });
+    });
+
+    describe('Security Tests', () => {
+        it('should not expose email in responses', async () => {
+            const candidate = new Candidate({
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john.doe@example.com',
+                phone: '123-456-7890',
+                address: '123 Main St'
+            });
+
+            (prisma.candidate.create as jest.Mock).mockResolvedValue({
+                id: 1,
+                firstName: 'John',
+                lastName: 'Doe',
+                phone: '123-456-7890',
+                address: '123 Main St',
+                email: 'john.doe@example.com' // Mocked response includes email
+            });
+
+            const result = await candidate.save();
+            expect(result).toEqual(expect.objectContaining({
+                id: 1,
+                firstName: 'John',
+                lastName: 'Doe',
+                phone: '123-456-7890',
+                address: '123 Main St'
+            }));
+            expect(result).not.toHaveProperty('email');
+        });
+
+        it('should handle email securely in logs', async () => {
+            const candidate = new Candidate({
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john.doe@example.com',
+                phone: '123-456-7890',
+                address: '123 Main St'
+            });
+
+            const logSpy = jest.spyOn(console, 'log');
+            await candidate.save();
+            expect(logSpy).not.toHaveBeenCalledWith(expect.stringContaining('john.doe@example.com'));
+            logSpy.mockRestore();
         });
     });
 });

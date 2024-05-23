@@ -74,10 +74,11 @@ export class Candidate {
             };
         }
 
+        let result;
         if (this.id) {
             // Actualizar un candidato existente
             try {
-                return await prisma.candidate.update({
+                result = await prisma.candidate.update({
                     where: { id: this.id },
                     data: candidateData
                 });
@@ -95,10 +96,9 @@ export class Candidate {
         } else {
             // Crear un nuevo candidato
             try {
-                const result = await prisma.candidate.create({
+                result = await prisma.candidate.create({
                     data: candidateData
                 });
-                return result;
             } catch (error: any) {
                 if (error instanceof PrismaClientInitializationError) {
                     // Database connection error
@@ -108,6 +108,10 @@ export class Candidate {
                 }
             }
         }
+
+        // Excluir el campo email del resultado
+        const { email, ...safeResult } = result;
+        return safeResult;
     }
 
     static async findOne(id: number): Promise<Candidate | null> {
