@@ -69,16 +69,17 @@ describe('Resume Model', () => {
                 id: 2,
                 candidateId: 1,
                 filePath: 'resume2.pdf',
-                fileType: 'pdf'
+                fileType: 'pdf',
+                uploadDate: new Date() // Mocked uploadDate
             });
 
-            const expectedResume = new Resume({
+            const expectedResume = {
                 id: 2,
                 candidateId: 1,
                 filePath: 'resume2.pdf',
                 fileType: 'pdf',
                 uploadDate: expect.any(Date)  // Use expect.any(Constructor) for properties that are dynamic
-            });
+            };
 
             const result = await resume.save();
             expect(result).toEqual(expectedResume);
@@ -180,6 +181,4 @@ describe('Resume Model', () => {
         expect(resume.uploadDate).toBeInstanceOf(Date);
     });
 });
-
-
 
