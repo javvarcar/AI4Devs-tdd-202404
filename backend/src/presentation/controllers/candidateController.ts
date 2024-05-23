@@ -14,5 +14,3 @@ export const addCandidateController = async (req: Request, res: Response) => {
         }
     }
 };
-
-export { addCandidate };
