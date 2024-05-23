@@ -164,6 +164,17 @@ describe('addCandidate', () => {
         // Expect the addCandidate function to throw the unexpected error
         await expect(addCandidate(candidateData)).rejects.toThrow('Unexpected database error');
     });
+
+    it('should throw an error if candidate data is invalid', async () => {
+        mockValidateCandidateData.mockImplementation(() => {
+            throw new Error('Invalid candidate data');
+        });
+        const candidateData = {
+            email: 'invalid.data@example.com',
+            firstName: 'John',
+            lastName: 'Doe'
+        };
+
+        await expect(addCandidate(candidateData)).rejects.toThrow('Invalid candidate data');
+    });
 });
-
-
