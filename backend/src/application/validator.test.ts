@@ -38,6 +38,11 @@ describe('Validator Tests', () => {
         it('should not throw an error for a valid email', () => {
             expect(() => validateEmail('john.doe@example.com')).not.toThrow();
         });
+
+        it('should prevent SQL injection in email', () => {
+            const maliciousEmail = "'; DROP TABLE candidates; --";
+            expect(() => validateEmail(maliciousEmail)).toThrow('Invalid email');
+        });
     });
 
     describe('validatePhone', () => {
