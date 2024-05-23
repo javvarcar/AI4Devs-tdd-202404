@@ -183,6 +183,16 @@ describe('Validator Tests', () => {
     });
 
     describe('validateCandidateData', () => {
+        it('should throw an error if required fields are missing', () => {
+            const invalidData = { firstName: 'John' }; // Missing lastName and email
+            expect(() => validateCandidateData(invalidData)).toThrow('Missing required fields');
+        });
+
+        it('should pass if all required fields are present', () => {
+            const validData = { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' };
+            expect(() => validateCandidateData(validData)).not.toThrow();
+        });
+
         it('should return early if an id is provided, indicating editing an existing candidate', () => {
             const candidateData = {
                 id: 123,

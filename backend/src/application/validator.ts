@@ -78,9 +78,11 @@ export const validateCV = (cv: any) => {
 };
 
 export const validateCandidateData = (data: any) => {
-    if (data.id) {
-        // If id is provided, we are editing an existing candidate, so fields are not mandatory
-        return;
+    const requiredFields = ['firstName', 'lastName', 'email'];
+    const missingFields = requiredFields.filter(field => !data[field]);
+
+    if (missingFields.length > 0) {
+        throw new Error('Missing required fields');
     }
 
     validateName(data.firstName);
