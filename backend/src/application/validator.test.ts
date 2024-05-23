@@ -317,4 +317,16 @@ describe('Validator Tests', () => {
             expect(() => validateCandidateData(candidateData)).not.toThrow();
         });
     });
+
+    describe('Sanitization Tests', () => {
+        it('should sanitize input to prevent SQL injection', () => {
+            const maliciousInput = "'; DROP TABLE candidates; --";
+            expect(() => validateName(maliciousInput)).toThrow('Invalid name');
+        });
+
+        it('should sanitize input to prevent XSS attacks', () => {
+            const maliciousInput = "<script>alert('XSS');</script>";
+            expect(() => validateName(maliciousInput)).toThrow('Invalid name');
+        });
+    });
 });
