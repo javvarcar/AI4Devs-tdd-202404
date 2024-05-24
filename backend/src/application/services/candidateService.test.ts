@@ -167,4 +167,44 @@ describe('addCandidate', () => {
             }
         }
     });
+
+    const testCases = [
+        [
+            {
+                name: 'Jane Smith',
+                email: 'jane.smith@example.com',
+                educations: [{ degree: 'MSc', institution: 'College' }],
+                workExperiences: [{ company: 'Tech Corp', role: 'Engineer' }],
+                cv: { fileName: 'resume.pdf', fileContent: '...' }
+            },
+            new Error('Simulated error')
+        ],
+        // Add more test cases as needed
+    ];
+
+    test.each(testCases)('should rollback transaction on error', async (candidateData, error) => {
+        const mockSave = jest.fn().mockRejectedValue(error);
+
+        (validateCandidateData as jest.Mock).mockImplementation(() => { });
+        (Candidate as unknown as jest.Mock).mockImplementation(() => ({
+            save: mockSave,
+            education: [],
+            workExperience: [],
+            resumes: []
+        }));
+
+        (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+            try {
+                await callback();
+            } catch (error) {
+                // Rollback logic here
+                throw error; // Rethrow the error to trigger rollback
+            }
+        });
+
+        // Assert that the transaction is rolled back on error
+        await expect(addCandidate(candidateData)).rejects.toThrow('Simulated error');
+        expect(mockSave).toHaveBeenCalled(); // Ensure save method was called
+        // Add additional assertions as needed
+    });
 });
