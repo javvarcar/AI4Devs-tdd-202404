@@ -6,18 +6,16 @@ const prisma = new PrismaClient();
 
 describe('Candidate Model', () => {
     describe('save method', () => {
-        it('should update an existing candidate', async () => {
-            const candidate = new Candidate({
-                id: 1,
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'john.doe@example.com'
-            });
+        const candidateData = [
+            { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
+            { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com' }
+        ];
+
+        it.each(candidateData)('should update an existing candidate with id %s', async (data) => {
+            const candidate = new Candidate(data);
 
             (prisma.candidate.update as jest.Mock).mockResolvedValue({
-                id: 1,
-                firstName: 'John',
-                lastName: 'Doe',
+                ...data,
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -26,10 +24,9 @@ describe('Candidate Model', () => {
             });
 
             const result = await candidate.save();
+            const { email, ...expectedData } = data; // Exclude email from expected data
             expect(result).toEqual({
-                id: 1,
-                firstName: 'John',
-                lastName: 'Doe',
+                ...expectedData,
                 phone: undefined,
                 address: undefined,
                 education: [],
@@ -37,18 +34,13 @@ describe('Candidate Model', () => {
                 resumes: []
             });
             expect(prisma.candidate.update).toHaveBeenCalledWith({
-                where: { id: 1 },
+                where: { id: data.id },
                 data: expect.any(Object)
             });
         });
 
-        it('should throw an error if candidate record not found on update', async () => {
-            const candidate = new Candidate({
-                id: 999, // assuming this ID does not exist
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'john.doe@example.com'
-            });
+        it.each(candidateData)('should throw an error if candidate record not found on update with id %s', async (data) => {
+            const candidate = new Candidate({ ...data, id: 999 });
 
             (prisma.candidate.update as jest.Mock).mockRejectedValue({ code: 'P2025' });
 
@@ -412,30 +404,35 @@ describe('Candidate Model', () => {
     });
 
     describe('findOne method', () => {
-        it('should return null if candidate not found', async () => {
+        const candidateIds = [999, 1];
+
+        it.each(candidateIds)('should return null if candidate not found with id %s', async (id) => {
             (prisma.candidate.findUnique as jest.Mock).mockResolvedValue(null);
 
-            const result = await Candidate.findOne(999); // assuming 999 is a non-existent ID
+            const result = await Candidate.findOne(id);
+
             expect(result).toBeNull();
         });
 
-        it('should return a candidate instance if found', async () => {
+        it.each(candidateIds)('should return a candidate instance if found with id %s', async (id) => {
             const candidateData = {
-                id: 1,
+                id: id,
                 firstName: 'John',
                 lastName: 'Doe',
                 email: 'john.doe@example.com'
             };
             (prisma.candidate.findUnique as jest.Mock).mockResolvedValue(candidateData);
 
-            const result = await Candidate.findOne(1);
+            const result = await Candidate.findOne(id);
+
             expect(result).toBeInstanceOf(Candidate);
-            expect(result?.id).toEqual(1);
+            expect(result?.id).toEqual(id);
         });
     });
 
     describe('Security Tests', () => {
         it('should not expose email in responses', async () => {
+            // Arrange
             const candidate = new Candidate({
                 firstName: 'John',
                 lastName: 'Doe',
@@ -453,7 +450,10 @@ describe('Candidate Model', () => {
                 email: 'john.doe@example.com' // Mocked response includes email
             });
 
+            // Act
             const result = await candidate.save();
+
+            // Assert
             expect(result).toEqual(expect.objectContaining({
                 id: 1,
                 firstName: 'John',
@@ -465,6 +465,7 @@ describe('Candidate Model', () => {
         });
 
         it('should handle email securely in logs', async () => {
+            // Arrange
             const candidate = new Candidate({
                 firstName: 'John',
                 lastName: 'Doe',
@@ -482,6 +483,7 @@ describe('Candidate Model', () => {
 
     describe('Data Integrity Tests', () => {
         it('should throw an error if email is not unique', async () => {
+            // Arrange
             const candidate = new Candidate({
                 firstName: 'John',
                 lastName: 'Doe',
@@ -493,10 +495,12 @@ describe('Candidate Model', () => {
                 meta: { target: ['email'] }
             });
 
+            // Act & Assert
             await expect(candidate.save()).rejects.toThrow('Unique constraint failed on the fields: (email)');
         });
 
         it('should throw an error if foreign key constraint is violated', async () => {
+            // Arrange
             const candidate = new Candidate({
                 firstName: 'John',
                 lastName: 'Doe',
@@ -515,6 +519,7 @@ describe('Candidate Model', () => {
                 meta: { field_name: 'Resume_candidateId_fkey (index)' }
             });
 
+            // Act & Assert
             await expect(candidate.save()).rejects.toThrow('Foreign key constraint failed on the field: Resume_candidateId_fkey (index)');
         });
     });

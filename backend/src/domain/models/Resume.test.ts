@@ -6,187 +6,151 @@ const prisma = new PrismaClient();
 
 describe('Resume Model', () => {
     describe('save method', () => {
-        it('should update an existing resume', async () => {
-            const resume = new Resume({
-                id: 1,
-                candidateId: 1,
-                filePath: 'resume1.pdf',
-                fileType: 'pdf'
-            });
+        const resumeTestCases = [
+            {
+                description: 'should update an existing resume',
+                resumeData: { id: 1, candidateId: 1, filePath: 'resume1.pdf', fileType: 'pdf' },
+                mockMethod: 'update' as 'update',
+                expectedResult: { id: 1, candidateId: 1, filePath: 'resume1.pdf', fileType: 'pdf', uploadDate: expect.any(Date) }
+            },
+            {
+                description: 'should create a new resume successfully',
+                resumeData: { candidateId: 1, filePath: 'resume2.pdf', fileType: 'pdf' },
+                mockMethod: 'create' as 'create',
+                expectedResult: { id: 2, candidateId: 1, filePath: 'resume2.pdf', fileType: 'pdf', uploadDate: expect.any(Date) }
+            }
+        ];
 
-            (prisma.resume.update as jest.Mock).mockResolvedValue(resume);
+        it.each(resumeTestCases)('$description', async ({ resumeData, mockMethod, expectedResult }) => {
+            // Arrange
+            const resume = new Resume(resumeData);
+            (prisma.resume[mockMethod] as jest.Mock).mockResolvedValue(expectedResult);
 
+            // Act
             const result = await resume.save();
-            const expectedResume = {
-                id: 1,
-                candidateId: 1,
-                filePath: 'resume1.pdf',
-                fileType: 'pdf',
-                uploadDate: expect.any(Date)
-            };
-            expect(result).toEqual(expectedResume);
-            expect(prisma.resume.update).toHaveBeenCalledWith({
-                where: { id: 1 },
-                data: expect.any(Object)
-            });
+
+            // Assert
+            expect(result).toEqual(expectedResult);
+            if (mockMethod === 'update') {
+                expect(prisma.resume[mockMethod]).toHaveBeenCalledWith({
+                    where: { id: resumeData.id },
+                    data: expect.any(Object)
+                });
+            } else {
+                expect(prisma.resume[mockMethod]).toHaveBeenCalledWith({
+                    data: expect.any(Object)
+                });
+            }
         });
 
         it('should throw an error if resume record not found on update', async () => {
-            const resume = new Resume({
-                id: 999, // assuming this ID does not exist
-                candidateId: 1,
-                filePath: 'resume1.pdf',
-                fileType: 'pdf'
-            });
-
+            // Arrange
+            const resume = new Resume({ id: 999, candidateId: 1, filePath: 'resume1.pdf', fileType: 'pdf' });
             (prisma.resume.update as jest.Mock).mockRejectedValue({ message: "Record not found", code: 'P2025' });
 
+            // Act & Assert
             await expect(resume.save()).rejects.toThrow('No se pudo encontrar el registro del resume con el ID proporcionado.');
         });
 
         it('should handle other errors on update', async () => {
-            const resume = new Resume({
-                id: 1,
-                candidateId: 1,
-                filePath: 'resume1.pdf',
-                fileType: 'pdf'
-            });
-
+            // Arrange
+            const resume = new Resume({ id: 1, candidateId: 1, filePath: 'resume1.pdf', fileType: 'pdf' });
             const error = new Error('Unexpected error');
             (prisma.resume.update as jest.Mock).mockRejectedValue(error);
 
+            // Act & Assert
             await expect(resume.save()).rejects.toThrow('Unexpected error');
         });
 
-        it('should create a new resume successfully', async () => {
-            const resume = new Resume({
-                candidateId: 1,
-                filePath: 'resume2.pdf',
-                fileType: 'pdf'
-            });
-
-            (prisma.resume.create as jest.Mock).mockResolvedValue({
-                id: 2,
-                candidateId: 1,
-                filePath: 'resume2.pdf',
-                fileType: 'pdf',
-                uploadDate: new Date() // Mocked uploadDate
-            });
-
-            const expectedResume = {
-                id: 2,
-                candidateId: 1,
-                filePath: 'resume2.pdf',
-                fileType: 'pdf',
-                uploadDate: expect.any(Date)  // Use expect.any(Constructor) for properties that are dynamic
-            };
-
-            const result = await resume.save();
-            expect(result).toEqual(expectedResume);
-        });
-
         it('should handle database connection errors on create', async () => {
-            const resume = new Resume({
-                candidateId: 1,
-                filePath: 'resume3.pdf',
-                fileType: 'pdf'
-            });
-
+            // Arrange
+            const resume = new Resume({ candidateId: 1, filePath: 'resume3.pdf', fileType: 'pdf' });
             const error = new PrismaClientInitializationError('Database connection error', 'P1001', '2.30.3');
             (prisma.resume.create as jest.Mock).mockRejectedValue(error);
 
+            // Act & Assert
             await expect(resume.save()).rejects.toThrow('No se pudo conectar con la base de datos. Por favor, asegúrese de que el servidor de base de datos esté en ejecución.');
         });
 
         it('should handle unexpected errors on create', async () => {
-            const resume = new Resume({
-                candidateId: 1,
-                filePath: 'resume4.pdf',
-                fileType: 'pdf'
-            });
-
+            // Arrange
+            const resume = new Resume({ candidateId: 1, filePath: 'resume4.pdf', fileType: 'pdf' });
             const error = new Error('Unexpected error');
             (prisma.resume.create as jest.Mock).mockRejectedValue(error);
 
+            // Act & Assert
             await expect(resume.save()).rejects.toThrow('Unexpected error');
         });
 
         it('should handle different file types', async () => {
-            const resume = new Resume({
-                candidateId: 1,
-                filePath: 'resume.docx',
-                fileType: 'docx'
-            });
+            // Arrange
+            const resume = new Resume({ candidateId: 1, filePath: 'resume.docx', fileType: 'docx' });
+            const expectedResult = { id: 3, candidateId: 1, filePath: 'resume.docx', fileType: 'docx', uploadDate: expect.any(Date) };
+            (prisma.resume.create as jest.Mock).mockResolvedValue(expectedResult);
 
-            (prisma.resume.create as jest.Mock).mockResolvedValue({
-                id: 3,
-                candidateId: 1,
-                filePath: 'resume.docx',
-                fileType: 'docx',
-                uploadDate: new Date()
-            });
-
-            const expectedResume = {
-                id: 3,
-                candidateId: 1,
-                filePath: 'resume.docx',
-                fileType: 'docx',
-                uploadDate: expect.any(Date)
-            };
-
+            // Act
             const result = await resume.save();
-            expect(result).toEqual(expectedResume);
+
+            // Assert
+            expect(result).toEqual(expectedResult);
+            expect(prisma.resume.create).toHaveBeenCalledWith({
+                data: expect.any(Object)
+            });
         });
 
         it('should handle large file sizes', async () => {
+            // Arrange
             const largeFilePath = 'large_resume.pdf';
-            const resume = new Resume({
-                candidateId: 1,
-                filePath: largeFilePath,
-                fileType: 'pdf'
-            });
+            const resume = new Resume({ candidateId: 1, filePath: largeFilePath, fileType: 'pdf' });
+            const expectedResume = { id: 4, candidateId: 1, filePath: largeFilePath, fileType: 'pdf', uploadDate: expect.any(Date) };
+            (prisma.resume.create as jest.Mock).mockResolvedValue(expectedResume);
 
-            (prisma.resume.create as jest.Mock).mockResolvedValue({
-                id: 4,
-                candidateId: 1,
-                filePath: largeFilePath,
-                fileType: 'pdf',
-                uploadDate: new Date()
-            });
-
-            const expectedResume = {
-                id: 4,
-                candidateId: 1,
-                filePath: largeFilePath,
-                fileType: 'pdf',
-                uploadDate: expect.any(Date)
-            };
-
+            // Act
             const result = await resume.save();
+
+            // Assert
             expect(result).toEqual(expectedResume);
         });
     });
 
     describe('findOne method', () => {
-        it('should return null if resume not found', async () => {
-            (prisma.resume.findUnique as jest.Mock).mockResolvedValue(null);
+        const findOneTestCases = [
+            {
+                description: 'should find a resume by ID',
+                id: 1,
+                mockResult: { id: 1, candidateId: 1, filePath: 'resume1.pdf', fileType: 'pdf', uploadDate: new Date() },
+                expectedResult: { id: 1, candidateId: 1, filePath: 'resume1.pdf', fileType: 'pdf', uploadDate: expect.any(Date) }
+            },
+            {
+                description: 'should return null if resume not found',
+                id: 999,
+                mockResult: null,
+                expectedResult: null
+            }
+        ];
 
-            const result = await Resume.findOne(999); // assuming 999 is a non-existent ID
-            expect(result).toBeNull();
+        it.each(findOneTestCases)('$description', async ({ id, mockResult, expectedResult }) => {
+            // Arrange
+            (prisma.resume.findUnique as jest.Mock).mockResolvedValue(mockResult);
+
+            // Act
+            const result = await Resume.findOne(id);
+
+            // Assert
+            expect(result).toEqual(expectedResult);
+            expect(prisma.resume.findUnique).toHaveBeenCalledWith({
+                where: { id }
+            });
         });
 
-        it('should return a resume instance if found', async () => {
-            const resumeData = {
-                id: 1,
-                candidateId: 1,
-                filePath: 'resume1.pdf',
-                fileType: 'pdf'
-            };
-            (prisma.resume.findUnique as jest.Mock).mockResolvedValue(resumeData);
+        it('should handle unexpected errors', async () => {
+            // Arrange
+            const id = 1;
+            const error = new Error('Unexpected error');
+            (prisma.resume.findUnique as jest.Mock).mockRejectedValue(error);
 
-            const result = await Resume.findOne(1);
-            expect(result).toBeInstanceOf(Resume);
-            expect(result?.id).toEqual(1);
+            // Act & Assert
+            await expect(Resume.findOne(id)).rejects.toThrow('Unexpected error');
         });
     });
 

@@ -23,52 +23,49 @@ describe('Education Model', () => {
         jest.clearAllMocks();
     });
 
-    it('should create a new education record', async () => {
-        (prisma.education.create as jest.Mock).mockResolvedValue(mockEducationData);
+    const educationTestCases: [string, number | undefined, 'create' | 'update'][] = [
+        ['should create a new education record', undefined, 'create'],
+        ['should update an existing education record', 1, 'update']
+    ];
 
-        education.id = undefined; // Ensure it's a new record
+    it.each(educationTestCases)('%s', async (_, id, method) => {
+        // Arrange
+        const mockMethod = method === 'create' ? prisma.education.create : prisma.education.update;
+        (mockMethod as jest.Mock).mockResolvedValue(mockEducationData);
+        education.id = id;
+
+        // Act
         const result = await education.save(mockEducationData.candidateId);
 
-        expect(prisma.education.create).toHaveBeenCalledWith({
-            data: {
-                institution: mockEducationData.institution,
-                title: mockEducationData.title,
-                startDate: new Date(mockEducationData.startDate),
-                endDate: new Date(mockEducationData.endDate),
-                candidateId: mockEducationData.candidateId,
-            },
-        });
-        expect(result).toEqual(mockEducationData);
-    });
-
-    it('should update an existing education record', async () => {
-        (prisma.education.update as jest.Mock).mockResolvedValue(mockEducationData);
-
-        const result = await education.save(mockEducationData.candidateId);
-
-        expect(prisma.education.update).toHaveBeenCalledWith({
-            where: { id: mockEducationData.id },
-            data: {
-                institution: mockEducationData.institution,
-                title: mockEducationData.title,
-                startDate: new Date(mockEducationData.startDate),
-                endDate: new Date(mockEducationData.endDate),
-                candidateId: mockEducationData.candidateId,
-            },
-        });
+        // Assert
+        const expectedData = {
+            institution: mockEducationData.institution,
+            title: mockEducationData.title,
+            startDate: new Date(mockEducationData.startDate),
+            endDate: new Date(mockEducationData.endDate),
+            candidateId: mockEducationData.candidateId,
+        };
+        if (method === 'create') {
+            expect(prisma.education.create).toHaveBeenCalledWith({ data: expectedData });
+        } else {
+            expect(prisma.education.update).toHaveBeenCalledWith({ where: { id: mockEducationData.id }, data: expectedData });
+        }
         expect(result).toEqual(mockEducationData);
     });
 
     it('should handle missing endDate', async () => {
+        // Arrange
         (prisma.education.create as jest.Mock).mockResolvedValue({
             ...mockEducationData,
             endDate: undefined,
         });
-
         education.endDate = undefined;
         education.id = undefined; // Ensure it's a new record
+
+        // Act
         const result = await education.save(mockEducationData.candidateId);
 
+        // Assert
         expect(prisma.education.create).toHaveBeenCalledWith({
             data: {
                 institution: mockEducationData.institution,
@@ -84,25 +81,17 @@ describe('Education Model', () => {
         });
     });
 
-    it('should handle missing candidateId', () => {
-        const dataWithoutCandidateId = {
-            ...mockEducationData,
-            candidateId: undefined,
-        };
+    const missingFieldTestCases: [string, Partial<typeof mockEducationData>, keyof typeof mockEducationData][] = [
+        ['should handle missing candidateId', { ...mockEducationData, candidateId: undefined }, 'candidateId'],
+        ['should handle missing endDate in constructor', { ...mockEducationData, endDate: undefined }, 'endDate']
+    ];
 
-        const educationWithoutCandidateId = new Education(dataWithoutCandidateId);
+    it.each(missingFieldTestCases)('%s', (testName, data, missingField) => {
+        // Act
+        const educationInstance = new Education(data);
 
-        expect(educationWithoutCandidateId.candidateId).toBeUndefined();
-    });
-
-    it('should handle missing endDate in constructor', () => {
-        const dataWithoutEndDate = {
-            ...mockEducationData,
-            endDate: undefined,
-        };
-
-        const educationWithoutEndDate = new Education(dataWithoutEndDate);
-
-        expect(educationWithoutEndDate.endDate).toBeUndefined();
+        // Assert
+        expect((educationInstance as any)[missingField]).toBeUndefined();
     });
 });
+

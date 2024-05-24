@@ -10,70 +10,91 @@ import {
     validateCandidateData
 } from './validator';
 
+const invalidNames = [
+    { name: 'A', error: 'Invalid name' },
+    { name: 'A'.repeat(101), error: 'Invalid name' },
+    { name: 'John123', error: 'Invalid name' },
+];
+
+const invalidEmails = [
+    { email: 'john.doe', error: 'Invalid email' },
+    { email: "'; DROP TABLE candidates; --", error: 'Invalid email' },
+];
+
+const invalidPhones = [
+    { phone: '123456789', error: 'Invalid phone' },
+];
+
+const invalidDates = [
+    { date: '01-01-2020', error: 'Invalid date' },
+];
+
+const invalidAddresses = [
+    { address: 'A'.repeat(101), error: 'Invalid address' },
+];
+
+const invalidEducations = [
+    { education: { institution: 'A'.repeat(101), title: 'Bachelor of Science', startDate: '2020-01-01', endDate: '2024-01-01' }, error: 'Invalid institution' },
+    { education: { institution: 'University', title: 'A'.repeat(101), startDate: '2020-01-01', endDate: '2024-01-01' }, error: 'Invalid title' },
+    { education: { institution: 'University', title: 'Bachelor of Science', startDate: '2020-01-01', endDate: '01-01-2024' }, error: 'Invalid end date' },
+];
+
+const invalidExperiences = [
+    { experience: { company: 'A'.repeat(101), position: 'Developer', description: 'Developing stuff', startDate: '2022-02-01', endDate: '2023-02-01' }, error: 'Invalid company' },
+    { experience: { company: 'Tech Co', position: 'A'.repeat(101), description: 'Developing stuff', startDate: '2022-02-01', endDate: '2023-02-01' }, error: 'Invalid position' },
+    { experience: { company: 'Tech Co', position: 'Developer', description: 'A'.repeat(201), startDate: '2022-02-01', endDate: '2023-02-01' }, error: 'Invalid description' },
+    { experience: { company: 'Tech Co', position: 'Developer', description: 'Developing stuff', startDate: '2022-02-01', endDate: '02-01-2023' }, error: 'Invalid end date' },
+];
+
 describe('Validator Tests', () => {
-    describe('validateName', () => {
-        it('should throw an error if the name is too short', () => {
-            expect(() => validateName('A')).toThrow('Invalid name');
-        });
-
-        it('should throw an error if the name is too long', () => {
-            const longName = 'A'.repeat(101);
-            expect(() => validateName(longName)).toThrow('Invalid name');
-        });
-
-        it('should throw an error if the name contains invalid characters', () => {
-            expect(() => validateName('John123')).toThrow('Invalid name');
-        });
-
-        it('should not throw an error for a valid name', () => {
-            expect(() => validateName('John Doe')).not.toThrow();
+    describe.each(invalidNames)('validateName', ({ name, error }) => {
+        it(`should throw an error for invalid name: ${name}`, () => {
+            expect(() => validateName(name)).toThrow(error);
         });
     });
 
-    describe('validateEmail', () => {
-        it('should throw an error for an invalid email', () => {
-            expect(() => validateEmail('john.doe')).toThrow('Invalid email');
-        });
+    it('should not throw an error for a valid name', () => {
+        expect(() => validateName('John Doe')).not.toThrow();
+    });
 
-        it('should not throw an error for a valid email', () => {
-            expect(() => validateEmail('john.doe@example.com')).not.toThrow();
-        });
-
-        it('should prevent SQL injection in email', () => {
-            const maliciousEmail = "'; DROP TABLE candidates; --";
-            expect(() => validateEmail(maliciousEmail)).toThrow('Invalid email');
+    describe.each(invalidEmails)('validateEmail', ({ email, error }) => {
+        it(`should throw an error for invalid email: ${email}`, () => {
+            expect(() => validateEmail(email)).toThrow(error);
         });
     });
 
-    describe('validatePhone', () => {
-        it('should throw an error for an invalid phone number', () => {
-            expect(() => validatePhone('123456789')).toThrow('Invalid phone');
-        });
+    it('should not throw an error for a valid email', () => {
+        expect(() => validateEmail('john.doe@example.com')).not.toThrow();
+    });
 
-        it('should not throw an error for a valid phone number', () => {
-            expect(() => validatePhone('612345678')).not.toThrow();
+    describe.each(invalidPhones)('validatePhone', ({ phone, error }) => {
+        it(`should throw an error for invalid phone number: ${phone}`, () => {
+            expect(() => validatePhone(phone)).toThrow(error);
         });
     });
 
-    describe('validateDate', () => {
-        it('should throw an error for an invalid date format', () => {
-            expect(() => validateDate('01-01-2020')).toThrow('Invalid date');
-        });
+    it('should not throw an error for a valid phone number', () => {
+        expect(() => validatePhone('612345678')).not.toThrow();
+    });
 
-        it('should not throw an error for a valid date format', () => {
-            expect(() => validateDate('2020-01-01')).not.toThrow();
+    describe.each(invalidDates)('validateDate', ({ date, error }) => {
+        it(`should throw an error for invalid date format: ${date}`, () => {
+            expect(() => validateDate(date)).toThrow(error);
         });
     });
 
-    describe('validateAddress', () => {
-        it('should throw an error if the address is too long', () => {
-            const longAddress = 'A'.repeat(101);
-            expect(() => validateAddress(longAddress)).toThrow('Invalid address');
-        });
+    it('should not throw an error for a valid date format', () => {
+        expect(() => validateDate('2020-01-01')).not.toThrow();
+    });
 
-        it('should not throw an error for a valid address', () => {
-            expect(() => validateAddress('123 Main St')).not.toThrow();
+    describe.each(invalidAddresses)('validateAddress', ({ address, error }) => {
+        it(`should throw an error if the address is too long: ${address}`, () => {
+            expect(() => validateAddress(address)).toThrow(error);
         });
+    });
+
+    it('should not throw an error for a valid address', () => {
+        expect(() => validateAddress('123 Main St')).not.toThrow();
     });
 
     describe('validateEducation', () => {
@@ -84,24 +105,10 @@ describe('Validator Tests', () => {
             endDate: '2024-01-01'
         };
 
-        it('should throw an error if the institution is too long', () => {
-            const invalidEducation = { ...validEducation, institution: 'A'.repeat(101) };
-            expect(() => validateEducation(invalidEducation)).toThrow('Invalid institution');
-        });
-
-        it('should throw an error if the title is too long', () => {
-            const invalidEducation = { ...validEducation, title: 'A'.repeat(101) };
-            expect(() => validateEducation(invalidEducation)).toThrow('Invalid title');
-        });
-
-        it('should throw an error if the end date is invalid', () => {
-            const invalidEducation = {
-                institution: 'University',
-                title: 'Bachelor of Science',
-                startDate: '2020-01-01',
-                endDate: '01-01-2024' // Formato incorrecto
-            };
-            expect(() => validateEducation(invalidEducation)).toThrow('Invalid end date');
+        describe.each(invalidEducations)('invalid education', ({ education, error }) => {
+            it(`should throw an error for invalid education: ${JSON.stringify(education)}`, () => {
+                expect(() => validateEducation(education)).toThrow(error);
+            });
         });
 
         it('should not throw an error for a valid education', () => {
@@ -118,30 +125,10 @@ describe('Validator Tests', () => {
             endDate: '2023-02-01'
         };
 
-        it('should throw an error if the company name is too long', () => {
-            const invalidExperience = { ...validExperience, company: 'A'.repeat(101) };
-            expect(() => validateExperience(invalidExperience)).toThrow('Invalid company');
-        });
-
-        it('should throw an error if the position is too long', () => {
-            const invalidExperience = { ...validExperience, position: 'A'.repeat(101) };
-            expect(() => validateExperience(invalidExperience)).toThrow('Invalid position');
-        });
-
-        it('should throw an error if the description is too long', () => {
-            const invalidExperience = { ...validExperience, description: 'A'.repeat(201) };
-            expect(() => validateExperience(invalidExperience)).toThrow('Invalid description');
-        });
-
-        it('should throw an error if the end date is invalid', () => {
-            const invalidExperience = {
-                company: 'Tech Co',
-                position: 'Developer',
-                description: 'Developing stuff',
-                startDate: '2022-02-01',
-                endDate: '02-01-2023' // Formato incorrecto
-            };
-            expect(() => validateExperience(invalidExperience)).toThrow('Invalid end date');
+        describe.each(invalidExperiences)('invalid experience', ({ experience, error }) => {
+            it(`should throw an error for invalid experience: ${JSON.stringify(experience)}`, () => {
+                expect(() => validateExperience(experience)).toThrow(error);
+            });
         });
 
         it('should not throw an error for a valid experience', () => {
