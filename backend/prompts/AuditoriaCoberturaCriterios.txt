@@ -1,0 +1,39 @@
+Estás realizando una auditoría del proyecto para revisar la cobertura de testing basado en criterios de aceptación específicos.
+
+Objetivo:
+Generar un reporte detallado indicando los casos de prueba cubiertos en cada grupo de los tests esperados y en qué archivos se encuentran.
+
+Criterios de Aceptación:
+
+Verificar que los tests siguen buenas prácticas como el patrón AAA y la parametrización.
+
+Identificar los tests cubiertos en los siguientes grupos:
+
+Recepción del formulario
+
+Validación de Formato: Verificar que el sistema valida correctamente el formato de los datos ingresados, como correos electrónicos, números de teléfono, y fechas, rechazando formatos inválidos
+Prueba de límites: Asegurarse de que los campos de entrada respetan los límites de longitud especificados, tanto máximos como mínimos, por ejemplo en entradas como teléfono o fecha de nacimiento futura, o de +100 años, o es menor de edad (criterios de negocio, HR vs reserva de viajes). Numeros negativos
+Sanitización de datos: Comprobar que todos los datos ingresados se limpian adecuadamente para evitar inyecciones de código, como inyecciones SQL o scripts maliciosos en campos de texto
+Comprobación de campos obligatorios: Verificar que todos los campos obligatorios deben estar completos para procesar el formulario.
+Carga correcta de documentos: Asegurarse de que el sistema maneja correctamente la carga de archivos, validando tipos de archivo y tamaños permitidos y almacenándolos correctamente
+Entradas duplicadas: Evaluar que el sistema puede identificar y manejar adecuadamente entradas duplicadas para evitar registros redundantes
+
+Interacción con la base de datos
+
+Manejo de excepciones: Verificar que el sistema maneja adecuadamente las excepciones de base de datos, como errores de conexión o violaciones de restricciones.
+Pruebas de Seguridad para Información Sensible: Comprobar que la información sensible del candidato, como su dirección o número de teléfono, se maneja de manera segura, encriptándola si es necesario.
+Inyección de SQL: Asegurarse de que el sistema es seguro contra ataques de inyección SQL.
+Inserción correcta: Verificar que el sistema puede insertar un nuevo registro en la base de datos sin errores y con todos los datos correctos.
+Integridad de datos: Asegurarse de que los datos ingresados no violan restricciones de integridad como claves únicas, claves foráneas, y restricciones de columna (como NOT NULL).
+Transacciones completas: Confirmar que las operaciones de base de datos se completan como una transacción atómica.
+Rollback de transacciones: Asegurar que en caso de error durante una transacción, todos los cambios se revierten adecuadamente (rollback).
+
+Realizar una revisión exhaustiva de los fragmentos de código proporcionados.
+Verificar la presencia de casos de prueba específicos antes de declarar que faltan.
+Cruzar los casos de prueba identificados con los criterios de aceptación definidos para confirmar la cobertura adecuada.
+En caso de duda sobre la presencia o ausencia de casos de prueba, solicitar aclaraciones o contexto adicional.
+
+Al final del análisis, dame un reporte con los casos que faltan
+
+Contexto proyecto:
+@backend 
