@@ -20,8 +20,12 @@ const mockPrismaClient = {
         create: jest.fn(),
         update: jest.fn(),
         findUnique: jest.fn(),
-    }
+    },
+    $transaction: jest.fn(async (fn: () => Promise<any>) => {
+        return await fn();
+    })
 };
 
 export const PrismaClient = jest.fn(() => mockPrismaClient);
+
 

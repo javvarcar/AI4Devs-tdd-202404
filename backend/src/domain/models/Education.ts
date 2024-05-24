@@ -19,7 +19,7 @@ export class Education {
         this.candidateId = data.candidateId;
     }
 
-    async save() {
+    async save(candidateId: number) {
         const educationData: any = {
             institution: this.institution,
             title: this.title,
@@ -27,8 +27,8 @@ export class Education {
             endDate: this.endDate,
         };
 
-        if (this.candidateId !== undefined) {
-            educationData.candidateId = this.candidateId;
+        if (candidateId !== undefined) {
+            educationData.candidateId = candidateId;
         }
 
         if (this.id) {

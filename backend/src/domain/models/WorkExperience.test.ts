@@ -114,6 +114,19 @@ describe('WorkExperience Model', () => {
 
             await expect(workExperience.save()).rejects.toThrow('No se pudo conectar con la base de datos. Por favor, asegúrese de que el servidor de base de datos esté en ejecución.');
         });
+
+        it('should handle undefined endDate in constructor', () => {
+            const workExperience = new WorkExperience({
+                company: 'Company E',
+                position: 'Manager',
+                description: 'Management work',
+                startDate: new Date('2020-01-01'),
+                endDate: undefined,
+                candidateId: 5
+            });
+
+            expect(workExperience.endDate).toBeUndefined();
+        });
     });
 
     describe('findOne method', () => {
@@ -142,5 +155,4 @@ describe('WorkExperience Model', () => {
         });
     });
 });
-
 

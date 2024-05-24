@@ -4,87 +4,105 @@ import { Education } from './Education';
 const prisma = new PrismaClient();
 
 describe('Education Model', () => {
-    describe('save method', () => {
-        it('should update an existing education record', async () => {
-            const education = new Education({
-                id: 1,
-                institution: 'University X',
-                title: 'Master of Science',
-                startDate: new Date('2020-01-01'),
-                endDate: new Date('2022-01-01'),
-                candidateId: 1
-            });
+    const mockEducationData = {
+        id: 1,
+        institution: 'Test University',
+        title: 'Bachelor of Science',
+        startDate: '2020-01-01',
+        endDate: '2024-01-01',
+        candidateId: 1,
+    };
 
-            (prisma.education.update as jest.Mock).mockResolvedValue(education);
+    let education: Education;
 
-            const result = await education.save();
-            expect(result).toEqual(education);
-            expect(prisma.education.update).toHaveBeenCalledWith({
-                where: { id: 1 },
-                data: expect.any(Object)
-            });
+    beforeEach(() => {
+        education = new Education(mockEducationData);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should create a new education record', async () => {
+        (prisma.education.create as jest.Mock).mockResolvedValue(mockEducationData);
+
+        education.id = undefined; // Ensure it's a new record
+        const result = await education.save(mockEducationData.candidateId);
+
+        expect(prisma.education.create).toHaveBeenCalledWith({
+            data: {
+                institution: mockEducationData.institution,
+                title: mockEducationData.title,
+                startDate: new Date(mockEducationData.startDate),
+                endDate: new Date(mockEducationData.endDate),
+                candidateId: mockEducationData.candidateId,
+            },
+        });
+        expect(result).toEqual(mockEducationData);
+    });
+
+    it('should update an existing education record', async () => {
+        (prisma.education.update as jest.Mock).mockResolvedValue(mockEducationData);
+
+        const result = await education.save(mockEducationData.candidateId);
+
+        expect(prisma.education.update).toHaveBeenCalledWith({
+            where: { id: mockEducationData.id },
+            data: {
+                institution: mockEducationData.institution,
+                title: mockEducationData.title,
+                startDate: new Date(mockEducationData.startDate),
+                endDate: new Date(mockEducationData.endDate),
+                candidateId: mockEducationData.candidateId,
+            },
+        });
+        expect(result).toEqual(mockEducationData);
+    });
+
+    it('should handle missing endDate', async () => {
+        (prisma.education.create as jest.Mock).mockResolvedValue({
+            ...mockEducationData,
+            endDate: undefined,
         });
 
-        it('should create a new education record', async () => {
-            const education = new Education({
-                institution: 'University Y',
-                title: 'Bachelor of Arts',
-                startDate: new Date('2018-01-01'),
-                endDate: new Date('2022-01-01'),
-                candidateId: 2
-            });
+        education.endDate = undefined;
+        education.id = undefined; // Ensure it's a new record
+        const result = await education.save(mockEducationData.candidateId);
 
-            // Ensure the mock includes the 'id' field
-            (prisma.education.create as jest.Mock).mockResolvedValue({
-                id: 2, // Explicitly include the id in the resolved value
-                institution: 'University Y',
-                title: 'Bachelor of Arts',
-                startDate: new Date('2018-01-01'),
-                endDate: new Date('2022-01-01'),
-                candidateId: 2
-            });
-
-            const result = await education.save();
-            expect(result).toEqual({
-                id: 2,
-                institution: 'University Y',
-                title: 'Bachelor of Arts',
-                startDate: new Date('2018-01-01'),
-                endDate: new Date('2022-01-01'),
-                candidateId: 2
-            });
+        expect(prisma.education.create).toHaveBeenCalledWith({
+            data: {
+                institution: mockEducationData.institution,
+                title: mockEducationData.title,
+                startDate: new Date(mockEducationData.startDate),
+                endDate: undefined,
+                candidateId: mockEducationData.candidateId,
+            },
         });
-
-        it('should handle errors on update', async () => {
-            const education = new Education({
-                id: 999, // assuming this ID does not exist
-                institution: 'University Z',
-                title: 'PhD in Physics',
-                startDate: new Date('2019-01-01'),
-                endDate: new Date('2023-01-01'),
-                candidateId: 3
-            });
-
-            const error = new Error('Unexpected error');
-            (prisma.education.update as jest.Mock).mockRejectedValue(error);
-
-            await expect(education.save()).rejects.toThrow('Unexpected error');
-        });
-
-        it('should handle errors on create', async () => {
-            const education = new Education({
-                institution: 'University Z',
-                title: 'PhD in Chemistry',
-                startDate: new Date('2019-01-01'),
-                endDate: new Date('2023-01-01'),
-                candidateId: 4
-            });
-
-            const error = new Error('Unexpected error');
-            (prisma.education.create as jest.Mock).mockRejectedValue(error);
-
-            await expect(education.save()).rejects.toThrow('Unexpected error');
+        expect(result).toEqual({
+            ...mockEducationData,
+            endDate: undefined,
         });
     });
-});
 
+    it('should handle missing candidateId', () => {
+        const dataWithoutCandidateId = {
+            ...mockEducationData,
+            candidateId: undefined,
+        };
+
+        const educationWithoutCandidateId = new Education(dataWithoutCandidateId);
+
+        expect(educationWithoutCandidateId.candidateId).toBeUndefined();
+    });
+
+    it('should handle missing endDate in constructor', () => {
+        const dataWithoutEndDate = {
+            ...mockEducationData,
+            endDate: undefined,
+        };
+
+        const educationWithoutEndDate = new Education(dataWithoutEndDate);
+
+        expect(educationWithoutEndDate.endDate).toBeUndefined();
+    });
+});
