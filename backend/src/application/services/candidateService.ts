@@ -57,3 +57,7 @@ export const addCandidate = async (candidateData: any) => {
         }
     }
 };
+
+export const getCandidate = async (id: number) => {
+    return await Candidate.findOne(id);
+};
