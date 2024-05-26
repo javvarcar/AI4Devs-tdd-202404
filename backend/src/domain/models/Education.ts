@@ -1,7 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-
+export interface EducationData {
+    id?: number;
+    institution: string;
+    title: string;
+    startDate: Date;
+    endDate?: Date;
+    candidateId?: number;
+}
 export class Education {
     id?: number;
     institution: string;
@@ -43,5 +50,17 @@ export class Education {
                 data: educationData
             });
         }
+    }
+
+    async findOne(id: number) {
+        return prisma.education.findUnique({
+            where: { id }
+        });
+    }
+
+    static async findAll(candidateId: number) {
+        return prisma.education.findMany({
+            where: { candidateId }
+        });
     }
 }

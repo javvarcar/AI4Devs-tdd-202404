@@ -210,48 +210,49 @@ describe('addCandidate', () => {
 });
 
 describe('getCandidate', () => {
-    test('should get a candidate by id', async () => {
-        const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com' };
-        (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
-        const candidate = await getCandidate(1);
-        expect(Candidate.findOne).toHaveBeenCalledWith(1);
-        expect(candidate).toEqual(expectedCandidate);
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
-    describe('should get a candidate with educations', () => {
-        test('should get a candidate with educations', async () => {
-            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', educations: [{ id: 1, degree: 'BSc', institution: 'University' }] };
-            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
-            const candidate = await getCandidate(1);
-            expect(Candidate.findOne).toHaveBeenCalledWith(1);
-            expect(candidate).toEqual(expectedCandidate);
+
+    test('should return a candidate with all associated data', async () => {
+        const candidateId = 1;
+        const mockCandidate = { id: candidateId, name: 'John Doe', email: 'john@example.com' };
+        const mockEducations = [{ id: 1, degree: 'BSc', institution: 'University' }];
+        const mockWorkExperiences = [{ id: 1, company: 'Company', role: 'Developer' }];
+        const mockResumes = [{ id: 1, fileName: 'resume.pdf', fileContent: '...' }];
+
+        (Candidate.findOne as jest.Mock).mockResolvedValue(mockCandidate);
+        (Education.findAll as jest.Mock).mockResolvedValue(mockEducations);
+        (WorkExperience.findAll as jest.Mock).mockResolvedValue(mockWorkExperiences);
+        (Resume.findAll as jest.Mock).mockResolvedValue(mockResumes);
+
+        const result = await getCandidate(candidateId);
+
+        expect(Candidate.findOne).toHaveBeenCalledWith(candidateId);
+        expect(Education.findAll).toHaveBeenCalledWith(candidateId);
+        expect(WorkExperience.findAll).toHaveBeenCalledWith(candidateId);
+        expect(Resume.findAll).toHaveBeenCalledWith(candidateId);
+        expect(result).toEqual({
+            ...mockCandidate,
+            education: mockEducations,
+            workExperience: mockWorkExperiences,
+            resumes: mockResumes
         });
     });
-    describe('should get a candidate with work experiences', () => {
-        test('should get a candidate with work experiences', async () => {
-            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', workExperience: [{ id: 1, company: 'Company', role: 'Developer' }] };
-            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
-            const candidate = await getCandidate(1);
-            expect(Candidate.findOne).toHaveBeenCalledWith(1);
-            expect(candidate).toEqual(expectedCandidate);
-        });
+
+    test('should throw an error if candidate is not found', async () => {
+        const candidateId = 999; // Non-existent ID
+        (Candidate.findOne as jest.Mock).mockResolvedValue(null);
+
+        await expect(getCandidate(candidateId)).rejects.toThrow('Candidate not found');
     });
-    describe('should get a candidate with resumes', () => {
-        test('should get a candidate with resumes', async () => {
-            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', resumes: [{ id: 1, fileName: 'resume.pdf', fileContent: '...' }] };
-            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
-            const candidate = await getCandidate(1);
-            expect(Candidate.findOne).toHaveBeenCalledWith(1);
-            expect(candidate).toEqual(expectedCandidate);
-        });
-    });
-    describe('should get a candidate with educations, work experiences and resumes', () => {
-        test('should get a candidate with educations and work experiences', async () => {
-            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', educations: [{ id: 1, degree: 'BSc', institution: 'University' }], workExperience: [{ id: 1, company: 'Company', role: 'Developer' }], resumes: [{ id: 1, fileName: 'resume.pdf', fileContent: '...' }] };
-            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
-            const candidate = await getCandidate(1);
-            expect(Candidate.findOne).toHaveBeenCalledWith(1);
-            expect(candidate).toEqual(expectedCandidate);
-        });
+
+    test('should handle errors during data fetching', async () => {
+        const candidateId = 1;
+        const error = new Error('Database error');
+        (Candidate.findOne as jest.Mock).mockRejectedValue(error);
+
+        await expect(getCandidate(candidateId)).rejects.toThrow('Failed to fetch candidate data: Database error');
     });
 });
 

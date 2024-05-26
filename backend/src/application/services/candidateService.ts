@@ -1,8 +1,8 @@
 import { Candidate } from '../../domain/models/Candidate';
 import { validateCandidateData } from '../validator';
-import { Education } from '../../domain/models/Education';
-import { WorkExperience } from '../../domain/models/WorkExperience';
-import { Resume } from '../../domain/models/Resume';
+import { Education, EducationData } from '../../domain/models/Education';
+import { WorkExperience, WorkExperienceData } from '../../domain/models/WorkExperience';
+import { Resume, ResumeData } from '../../domain/models/Resume';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -59,5 +59,23 @@ export const addCandidate = async (candidateData: any) => {
 };
 
 export const getCandidate = async (id: number) => {
-    return await Candidate.findOne(id);
+    try {
+        const candidate = await Candidate.findOne(id);
+        if (!candidate) {
+            throw new Error('Candidate not found');
+        }
+
+        const educations = await Education.findAll(id) as EducationData[];
+        const workExperiences = await WorkExperience.findAll(id) as WorkExperienceData[];
+        const resumes = await Resume.findAll(id) as ResumeData[];
+
+        return {
+            ...candidate,
+            education: educations,
+            workExperience: workExperiences,
+            resumes: resumes
+        }
+    } catch (error: any) {
+        throw new Error(`Failed to fetch candidate data: ${error.message}`);
+    }
 };

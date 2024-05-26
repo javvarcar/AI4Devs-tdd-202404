@@ -2,7 +2,15 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaClientInitializationError } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
-
+export interface WorkExperienceData {
+    id?: number;
+    company: string;
+    position: string;
+    description?: string;
+    startDate: Date;
+    endDate?: Date;
+    candidateId?: number;
+}
 export class WorkExperience {
     id?: number;
     company: string;
@@ -66,5 +74,11 @@ export class WorkExperience {
         const workExperienceData = await prisma.workExperience.findUnique({ where: { id } });
         if (!workExperienceData) return null;
         return new WorkExperience(workExperienceData);
+    }
+
+    static async findAll(candidateId: number) {
+        return prisma.workExperience.findMany({
+            where: { candidateId }
+        });
     }
 }

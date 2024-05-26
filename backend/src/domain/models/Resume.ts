@@ -2,7 +2,13 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaClientInitializationError } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
-
+export interface ResumeData {
+    id?: number;
+    candidateId?: number;
+    filePath: string;
+    fileType: string;
+    uploadDate: Date;
+}
 export class Resume {
     id: number;
     candidateId: number;
@@ -53,5 +59,11 @@ export class Resume {
         const resumeData = await prisma.resume.findUnique({ where: { id } });
         if (!resumeData) return null;
         return new Resume(resumeData);
+    }
+
+    static async findAll(candidateId: number) {
+        return prisma.resume.findMany({
+            where: { candidateId }
+        });
     }
 }
