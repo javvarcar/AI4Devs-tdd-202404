@@ -404,7 +404,7 @@ describe('Candidate Model', () => {
     });
 
     describe('findOne method', () => {
-        const candidateIds = [999, 1];
+        const candidateIds = [999, 1, -1];
 
         it.each(candidateIds)('should return null if candidate not found with id %s', async (id) => {
             (prisma.candidate.findUnique as jest.Mock).mockResolvedValue(null);

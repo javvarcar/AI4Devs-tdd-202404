@@ -1,4 +1,4 @@
-import { addCandidate } from './candidateService';
+import { addCandidate, getCandidate } from './candidateService';
 import { validateCandidateData } from '../validator';
 import { Candidate } from '../../domain/models/Candidate';
 import { Education } from '../../domain/models/Education';
@@ -208,3 +208,50 @@ describe('addCandidate', () => {
         // Add additional assertions as needed
     });
 });
+
+describe('getCandidate', () => {
+    test('should get a candidate by id', async () => {
+        const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com' };
+        (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
+        const candidate = await getCandidate(1);
+        expect(Candidate.findOne).toHaveBeenCalledWith(1);
+        expect(candidate).toEqual(expectedCandidate);
+    });
+    describe('should get a candidate with educations', () => {
+        test('should get a candidate with educations', async () => {
+            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', educations: [{ id: 1, degree: 'BSc', institution: 'University' }] };
+            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
+            const candidate = await getCandidate(1);
+            expect(Candidate.findOne).toHaveBeenCalledWith(1);
+            expect(candidate).toEqual(expectedCandidate);
+        });
+    });
+    describe('should get a candidate with work experiences', () => {
+        test('should get a candidate with work experiences', async () => {
+            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', workExperience: [{ id: 1, company: 'Company', role: 'Developer' }] };
+            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
+            const candidate = await getCandidate(1);
+            expect(Candidate.findOne).toHaveBeenCalledWith(1);
+            expect(candidate).toEqual(expectedCandidate);
+        });
+    });
+    describe('should get a candidate with resumes', () => {
+        test('should get a candidate with resumes', async () => {
+            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', resumes: [{ id: 1, fileName: 'resume.pdf', fileContent: '...' }] };
+            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
+            const candidate = await getCandidate(1);
+            expect(Candidate.findOne).toHaveBeenCalledWith(1);
+            expect(candidate).toEqual(expectedCandidate);
+        });
+    });
+    describe('should get a candidate with educations, work experiences and resumes', () => {
+        test('should get a candidate with educations and work experiences', async () => {
+            const expectedCandidate = { id: 1, name: 'John Doe', email: 'john.doe@example.com', educations: [{ id: 1, degree: 'BSc', institution: 'University' }], workExperience: [{ id: 1, company: 'Company', role: 'Developer' }], resumes: [{ id: 1, fileName: 'resume.pdf', fileContent: '...' }] };
+            (Candidate.findOne as jest.Mock).mockResolvedValue(expectedCandidate);
+            const candidate = await getCandidate(1);
+            expect(Candidate.findOne).toHaveBeenCalledWith(1);
+            expect(candidate).toEqual(expectedCandidate);
+        });
+    });
+});
+
