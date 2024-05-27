@@ -1,7 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-
+export interface EducationData {
+    id?: number;
+    institution: string;
+    title: string;
+    startDate: Date;
+    endDate?: Date;
+    candidateId?: number;
+}
 export class Education {
     id?: number;
     institution: string;
@@ -19,7 +26,7 @@ export class Education {
         this.candidateId = data.candidateId;
     }
 
-    async save() {
+    async save(candidateId: number) {
         const educationData: any = {
             institution: this.institution,
             title: this.title,
@@ -27,8 +34,8 @@ export class Education {
             endDate: this.endDate,
         };
 
-        if (this.candidateId !== undefined) {
-            educationData.candidateId = this.candidateId;
+        if (candidateId !== undefined) {
+            educationData.candidateId = candidateId;
         }
 
         if (this.id) {
@@ -43,5 +50,17 @@ export class Education {
                 data: educationData
             });
         }
+    }
+
+    async findOne(id: number) {
+        return prisma.education.findUnique({
+            where: { id }
+        });
+    }
+
+    static async findAll(candidateId: number) {
+        return prisma.education.findMany({
+            where: { candidateId }
+        });
     }
 }

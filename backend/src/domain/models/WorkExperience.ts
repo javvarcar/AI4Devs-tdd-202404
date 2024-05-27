@@ -1,7 +1,16 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaClientInitializationError } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
-
+export interface WorkExperienceData {
+    id?: number;
+    company: string;
+    position: string;
+    description?: string;
+    startDate: Date;
+    endDate?: Date;
+    candidateId?: number;
+}
 export class WorkExperience {
     id?: number;
     company: string;
@@ -27,24 +36,49 @@ export class WorkExperience {
             position: this.position,
             description: this.description,
             startDate: this.startDate,
-            endDate: this.endDate
+            endDate: this.endDate,
+            candidateId: this.candidateId
         };
 
-        if (this.candidateId !== undefined) {
-            workExperienceData.candidateId = this.candidateId;
-        }
-
         if (this.id) {
-            // Actualizar una experiencia laboral existente
-            return await prisma.workExperience.update({
-                where: { id: this.id },
-                data: workExperienceData
-            });
+            try {
+                const updatedWorkExperience = await prisma.workExperience.update({
+                    where: { id: this.id },
+                    data: workExperienceData
+                });
+                return new WorkExperience(updatedWorkExperience);
+            } catch (error: any) {
+                if ('code' in error && error.code === 'P2025') {
+                    throw new Error('No se pudo encontrar el registro de la experiencia laboral con el ID proporcionado.');
+                } else {
+                    throw new Error('Unexpected error');
+                }
+            }
         } else {
-            // Crear una nueva experiencia laboral
-            return await prisma.workExperience.create({
-                data: workExperienceData
-            });
+            try {
+                const createdWorkExperience = await prisma.workExperience.create({
+                    data: workExperienceData
+                });
+                return new WorkExperience(createdWorkExperience);
+            } catch (error: any) {
+                if (error instanceof PrismaClientInitializationError) {
+                    throw new Error('No se pudo conectar con la base de datos. Por favor, asegúrese de que el servidor de base de datos esté en ejecución.');
+                } else {
+                    throw new Error('Unexpected error');
+                }
+            }
         }
+    }
+
+    static async findOne(id: number): Promise<WorkExperience | null> {
+        const workExperienceData = await prisma.workExperience.findUnique({ where: { id } });
+        if (!workExperienceData) return null;
+        return new WorkExperience(workExperienceData);
+    }
+
+    static async findAll(candidateId: number) {
+        return prisma.workExperience.findMany({
+            where: { candidateId }
+        });
     }
 }

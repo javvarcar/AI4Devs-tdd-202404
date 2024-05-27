@@ -1,0 +1,10 @@
+Ayúdame a completar el coverage de @validator.ts  en @validator.test.ts  . Si no conoces los types o tienes dudas sobre los mocks, no asumas nada, pide aclaración.
+
+Debes usar las mejores prácticas de testing como AAA y parametrización
+
+Para la parametrización crea los arrays fuera de los test.each para mejor lectura
+
+Cuando generes el código, dime exactamente qué lineas has cubierto y como.
+
+Contexto:
+@backend
