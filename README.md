@@ -149,3 +149,11 @@ POST http://localhost:3010/candidates
 }
 ```
 
+## Tests
+
+Para ejecutar la suite de tests, basta con lanzar el comando
+
+```sh
+cd backend
+npm test
+```
